@@ -6,7 +6,15 @@ LABEL org.opencontainers.image.source="https://github.com/bitrixdock/bitrixdock"
 # т.к. пакеты для PHP 7.4 больше не доступны в ondrej/php PPA после достижения EOL.
 # Расширения устанавливаются через компиляцию из исходников.
 
-RUN apt-get update \
+# Фиксируем согласованный снимок Bullseye: текущий security-репозиторий
+# возвращает 404 для пакетов из своего индекса. Проверка подписей сохраняется.
+ARG DEBIAN_SNAPSHOT=20260801T000000Z
+RUN printf '%s\n' \
+    "deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/${DEBIAN_SNAPSHOT} bullseye main" \
+    "deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/${DEBIAN_SNAPSHOT} bullseye-updates main" \
+    "deb [check-valid-until=no] https://snapshot.debian.org/archive/debian-security/${DEBIAN_SNAPSHOT} bullseye-security main" \
+    > /etc/apt/sources.list \
+    && apt-get update -o APT::Update::Error-Mode=any \
     && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
